@@ -1,43 +1,38 @@
 <html>
   <head>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 	<script type="text/javascript">
       google.load("visualization", "1", {packages:["corechart"]});
-	  google.load("jquery", "1.5.0");
-      google.setOnLoadCallback(drawChart);
-      function drawChart() {
-        var data = new google.visualization.DataTable();
-        data.addColumn('string', 'Year');
-        data.addColumn('number', 'Ragged Mountain');
-        data.addColumn('number', 'South Fork Rivana');
-		data.addColumn('number', 'Sugar Hollow');
-		if ($('input:radio[name=plan]:checked').val() =="dredge") {
-			data.addRows([
-			  ['2011', 514, 1700, 360],
-			  ['2020', 950, 1760, 360],
-			  ['2025', 950, 1760, 360],
-			  ['2045', 950, 1760, 360],
-			  ['2055', 950, 1760, 360]
-			]);
-		} else {
-			data.addRows([
-			  ['2016', 514, 1700, 360],
-			  ['2020', 950, 1760, 360],
-			  ['2025', 950, 1760, 360],
-			  ['2045', 950, 1760, 360],
-			  ['2055', 950, 1760, 360]
-			]);
-		}		
+	  google.setOnLoadCallback(drawChart);
+	  
+		function drawChart() {
+			var plan_type = $("input:radio[name=plan]:checked").val();
+			var query = new google.visualization.Query('https://spreadsheets.google.com/pub?key=0Alq4L_vbhKeudHpPMmxISVZpNHVwSXdHSS1TQk4ydHc&pub=1');
+			if (plan_type =="dredge") {
+				query.setQuery('select A, B, C, D where E = "dredge"');
+			} else {
+				query.setQuery('select A, B, C, D where E = "dam"');
+			}
+			query.send(makeChart);	
+		}
+	
+	  function makeChart(response) {
+		if (response.isError()) {
+			alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
+		return;
+		}
 
+		var data = response.getDataTable();
         var chart = new google.visualization.AreaChart(document.getElementById('chart_div'));
-        chart.draw(data, {isStacked: true, width: 400, height: 240, title: 'Charlottesville Water Plan - Dredging Option',
-                          hAxis: {title: 'Year', titleTextStyle: {color: '#FF0000'}}
-                         });
+        chart.draw(data, {isStacked: true, width: 500, height: 240, title: 'Charlottesville Water Plan',
+                          hAxis: {title: 'Year', titleTextStyle: {color: '#FF0000'}},vAxis: {title: "Water (Million Gal)", titleTextStyle: {color: '#FF0000'}}
+                        });
       }
 	  
 	 $().ready(function(){
-		$("#plan").click(function(){
-			drawchart();
+		$('.target').change(function(){
+			drawChart();
 		});
 	 });
     </script>
@@ -45,8 +40,8 @@
   <body>
     <div id="chart_div"></div>
 	<div id="pick">
-		<input type="radio" name="plan" value="dredge" checked="true" id="plan"> Dredge<br>
-		<input type="radio" name="plan" value="dam" id="plan"> Dam!<br>
+		<input type="radio" name="plan" value="dredge" checked="true" class="target"> Dredge<br>
+		<input type="radio" name="plan" value="dam" class="target"> Dam!<br>
 	</div>
   </body>
 </html>
